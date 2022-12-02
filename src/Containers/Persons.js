@@ -1,307 +1,251 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import {
   View,
   Text,
+  SafeAreaView,
   StyleSheet,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
+  TextInput,
+  Image,
 } from 'react-native'
+import { connect } from 'react-redux'
 import { Colors } from '@/Theme/Variables'
 import scaling from '../Theme/normalize.js'
-import { connect } from 'react-redux'
-import { personData, albumData } from '@/redux/actions/app.actions.js'
-import { navigations } from '@/Navigators/ScreenNames.js'
+import FlatlistComponent from '@/Components/FlatlistComponent.js'
 import Loader from '@/Components/loader.js'
-import PieChart from 'react-native-pie-chart'
+import { debounce } from 'lodash'
+import { getSearch } from '@/redux/actions/app.actions.js'
 
 const { normalize, widthScale, heightScale, moderateScale } = scaling
 
-const Persons = props => {
-  const [donutData, setDonutData] = useState([])
-  const [sliceColor, setSliceColor] = useState([])
-
-  const [albumCount, setAlbumCount] = useState({})
-  const [peopleData, setPeopleData] = useState([])
+const SearchMovies = props => {
+  const [states, setStates] = useState({ pageNo: 1, forceUpdate: false })
+  const [searchText, setSearchText] = useState('')
+  const [searchData, setSearchData] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const flatListRef = useRef()
+  const inputRef = useRef()
 
   useEffect(() => {
-    props.personData()
-    props.albumData()
+    if (searchText != '') {
+      setLoading(true)
+      props.getSearch({ searchText: searchText, pageNo: states.pageNo })
+    }
+  }, [states])
+
+  useEffect(() => {
+    inputRef.current = debounce(getSearchData, 800)
   }, [])
 
-  useEffect(() => {}, [sliceColor])
-
   useEffect(() => {
-    if (Object.keys(albumCount).length > 0) {
-      let tempDonutData = []
-      let tempDonutColor = []
-      for (let i in albumCount) {
-        tempDonutData.push(albumCount[i])
-        tempDonutColor.push(generateColor())
-      }
-      setSliceColor(tempDonutColor)
-      setDonutData(tempDonutData)
-    }
-  }, [albumCount])
+    if (props.searchSuccess) {
+      if (props.searchSuccess?.Response !== 'False') {
+        let temp = [...props.searchSuccess?.Search]
 
-  useEffect(() => {
-    if (props.personDataSuccess) {
-      setPeopleData(props.personDataSuccess)
-    }
-  }, [props.personDataSuccess])
-
-  useEffect(() => {
-    if (props.albumDataSuccess) {
-      let tempCount = {}
-      props.albumDataSuccess.map((value, index, array) => {
-        if (tempCount[value?.userId]) {
-          tempCount[value?.userId] += 1
+        if (states.pageNo > 1) {
+          setSearchData([...searchData, ...temp])
         } else {
-          tempCount[value?.userId] = 1
+          setSearchData(temp)
         }
-      })
-      setAlbumCount(tempCount)
-    }
-  }, [props.albumDataSuccess])
-
-  useEffect(() => {
-    if (props.albumDataFail) {
-      console.log(props.albumDataFail)
-      // setPeopleData(props.albumDataFail)
-    }
-  }, [props.albumDataFail])
-
-  const generateColor = () => {
-    const randomColor = Math.floor(Math.random() * 16777215)
-      .toString(16)
-      .padStart(6, '0')
-    return `#${randomColor}`
-  }
-
-  const processNumber = phone => {
-    let processedPhone = ''
-    let count = 0
-    for (let i of phone) {
-      if (count == 10) {
-        return processedPhone
       } else {
-        checkNumber = Number(i)
-        if (!isNaN(checkNumber)) {
-          count++
-          processedPhone = processedPhone + i.toString()
-        }
+        setError(props.searchSuccess?.Error)
+        setLoading(false)
+        setSearchData([])
       }
     }
-  }
+  }, [props.searchSuccess])
 
-  const navigateAlbums = item => {
-    props.navigation.navigate(navigations.albums, {
-      name: item?.name,
-      userId: item?.id,
+  useEffect(() => {
+    if (searchData.length > 0) {
+      setLoading(false)
+    }
+  }, [searchData])
+
+  const seperator = () => {
+    return <View style={styles.seperatorView} />
+  }
+  const getSearchData = () => {
+    setStates(prevStates => {
+      return { ...prevStates, forceUpdate: !prevStates.forceUpdate, pageNo: 1 }
     })
   }
 
-  const ShowDonutDistribution = () => {
-    Object.entries(albumCount).map(function (value, index, array) {
-      return (
-        <View>
-          <Text>{value}</Text>
-        </View>
-      )
-    })
-  }
-
-  const renderItem = ({ item }) => {
+  const renderItem = ({ item, index }) => {
     return (
-      <TouchableOpacity
-        style={styles.renderItemView}
-        onPress={() => navigateAlbums(item)}
-      >
-        <View style={styles.cardView}>
-          <View style={styles.innerCardView}>
-            <Text style={styles.name}>{item?.name}</Text>
-            <Text style={styles.emailText}>{item?.email}</Text>
-            <Text style={[styles.emailText, { marginTop: heightScale(4) }]}>
-              {processNumber(item?.phone)}
-            </Text>
-            <View style={[styles.seperator, { marginTop: heightScale(24) }]} />
-            <View style={styles.row}>
-              <Text style={styles.company}>{item?.company?.name}</Text>
-              <Text style={styles.company}>{albumCount[item?.id]}</Text>
+      <View style={styles.panelView}>
+        <View style={styles.bodyView}>
+          <Text
+            style={[
+              styles.bodyTextStyle,
+              { fontWeight: 'bold', marginBottom: heightScale(10) },
+            ]}
+          >
+            {item?.Title}
+          </Text>
+          <Image
+            style={styles.imagePreview}
+            source={{
+              uri: `${item?.Poster}`,
+            }}
+            resizeMode="contain"
+          />
+          <View style={{ alignItems: 'flex-start' }}>
+            <View style={styles.bodyStyle}>
+              <Text style={[styles.bodyTextStyle, { fontWeight: 'bold' }]}>
+                {'Year:'}
+              </Text>
+              <Text style={styles.bodyTextStyle}>{item?.Year}</Text>
+            </View>
+            <View style={styles.bodyStyle}>
+              <Text style={[styles.bodyTextStyle, { fontWeight: 'bold' }]}>
+                {'Imdb ID:'}
+              </Text>
+              <Text style={styles.bodyTextStyle}>{item?.imdbID}</Text>
+            </View>
+            <View style={styles.bodyStyle}>
+              <Text style={[styles.bodyTextStyle, { fontWeight: 'bold' }]}>
+                {'Type:'}
+              </Text>
+              <Text style={styles.bodyTextStyle}>{item?.Type}</Text>
             </View>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     )
   }
   return (
     <View style={styles.main}>
-      {props.personDataLoading ? (
-        <Loader />
-      ) : (
-        <ScrollView>
-          <View style={styles.seperator} />
-          <Text style={styles.title}>People</Text>
-          <View style={styles.flatlistView}>
-            <FlatList
-              nestedScrollEnabled
-              style={styles.flatList}
-              data={peopleData.length > 0 ? peopleData : []}
-              renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
-            />
+      <SafeAreaView style={{ backgroundColor: Colors.grayWhite2 }} />
+      {props.searchLoading || loading ? <Loader /> : null}
+      <View style={styles.mainPadding}>
+        <View style={styles.searchBar}>
+          <View style={styles.searchImageView}>
+            <Image source={require('../Assets/Images/SearchIcon.png')} />
           </View>
-          <Text style={styles.title}>Analytics</Text>
-          <View style={styles.analyticsView}>
-            <Text style={styles.analyticsTitle}>People</Text>
-            {Object.keys(sliceColor).length > 0 &&
-            Object.keys(donutData).length > 0 ? (
-              <PieChart
-                style={styles.pieChartStyle}
-                widthAndHeight={moderateScale(200)}
-                series={donutData}
-                sliceColor={sliceColor}
-                doughnut={true}
-                coverRadius={0.8}
-                // coverFill={'#FFF'}
-              />
-            ) : null}
-            <View>
-              {peopleData?.map((value, index, array) => {
-                return (
-                  <View
-                    style={[
-                      styles.row,
-                      { alignItems: 'center', justifyContent: 'flex-start' },
-                    ]}
-                  >
-                    <View
-                      style={[
-                        styles.circle,
-                        {
-                          backgroundColor: sliceColor[value?.id - 1],
-                        },
-                      ]}
-                    ></View>
-                    <Text style={styles.colorNames}>{value?.name}</Text>
-                  </View>
-                )
-              })}
-            </View>
-          </View>
-        </ScrollView>
-      )}
+          <TextInput
+            style={styles.searchTextView}
+            value={searchText}
+            placeholder={'Search'}
+            placeholderTextColor={Colors.tripGray}
+            onChangeText={value => {
+              inputRef.current(value)
+              setSearchText(value)
+            }}
+          />
+        </View>
+
+        <FlatlistComponent
+          error={error}
+          reference={flatListRef}
+          style={styles.flatlistStyle}
+          showsVerticalScrollIndicator={true}
+          data={searchData}
+          thresholdValue={0.8}
+          ItemSeparatorComponent={seperator}
+          renderItem={renderItem}
+          currentPage={states.pageNo}
+          onPageChange={value => {
+            setStates({ ...states, pageNo: value })
+          }}
+          totalItemCount={props.searchSuccess?.totalResults}
+        />
+      </View>
     </View>
   )
 }
-
-const mapStateToProps = ({ App, Auth }) => {
-  const {
-    personDataLoading,
-    personDataSuccess,
-    personDataFail,
-    albumDataLoading,
-    albumDataSuccess,
-    albumDataFail,
-  } = App
-  const {} = Auth
-  return {
-    personDataLoading,
-    personDataSuccess,
-    personDataFail,
-    albumDataLoading,
-    albumDataSuccess,
-    albumDataFail,
-  }
-}
-
-const mapDispatchToProps = { personData, albumData }
-
-export default connect(mapStateToProps, mapDispatchToProps)(Persons)
 
 const styles = StyleSheet.create({
   main: {
     flex: 1,
     backgroundColor: Colors.white,
   },
-  seperator: {
-    borderBottomColor: Colors.border,
+  flatlistStyle: {
+    marginBottom: moderateScale(20),
+  },
+  mainPadding: {
+    flex: 1,
+    paddingHorizontal: moderateScale(25),
+  },
+  buttonView: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    paddingBottom: heightScale(10),
+    backgroundColor: Colors.white,
+  },
+  buttonCall: {
+    flexDirection: 'row',
+    height: moderateScale(45),
+    width: moderateScale(147),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.grassGreen,
+    borderRadius: moderateScale(50),
+  },
+  buttonText: {
+    fontWeight: '700',
+    fontSize: normalize(16),
+    color: Colors.white,
+    marginLeft: widthScale(5),
+  },
+  buttonChat: {
+    flexDirection: 'row',
+    height: moderateScale(45),
+    width: moderateScale(147),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.tripGray,
+    borderRadius: moderateScale(50),
+  },
+  searchBar: {
+    flexDirection: 'row',
+    borderWidth: moderateScale(1),
+    borderRadius: moderateScale(5),
+    borderColor: Colors.tripGray,
+    height: moderateScale(45),
+  },
+  searchImageView: {
+    justifyContent: 'center',
+    marginLeft: widthScale(12),
+  },
+  searchTextView: {
+    flex: 1,
+    marginLeft: widthScale(10),
+    fontWeight: '600',
+    color: Colors.black,
+  },
+  seperatorView: {
+    borderBottomColor: Colors.black,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: {
-    marginLeft: widthScale(20),
-    marginTop: heightScale(10),
-    fontSize: normalize(22),
-    fontWeight: '700',
-    color: Colors.black,
+  panelView: {
+    paddingVertical: heightScale(20),
   },
-  renderItemView: {
-    marginHorizontal: moderateScale(24),
+  bodyTextStyle: {
+    paddingTop: heightScale(20),
+    fontSize: normalize(12),
+
+    fontWeight: '400',
+    color: Colors.Black1,
   },
-  cardView: {
-    height: moderateScale(200),
-    borderRadius: moderateScale(6),
-    borderWidth: moderateScale(1),
-    borderColor: Colors.border,
-    marginBottom: heightScale(16),
+  imagePreview: {
+    width: moderateScale(150),
+    height: moderateScale(150),
   },
-  flatList: {
-    marginTop: heightScale(16),
+  bodyView: {
+    alignItems: 'center',
+    padding: moderateScale(0),
   },
-  innerCardView: {
-    margin: widthScale(16),
-  },
-  name: {
-    fontSize: normalize(22),
-    fontWeight: '700',
-    color: Colors.black,
-  },
-  emailText: {
-    fontWeight: '500',
-    fontSize: normalize(16),
-    color: Colors.newGray,
-    marginTop: heightScale(5),
-  },
-  row: {
+  bodyStyle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: heightScale(12),
-  },
-  company: {
-    color: Colors.newGray,
-    fontSize: normalize(16),
-    fontWeight: '500',
-  },
-  flatlistView: {
-    height: moderateScale(400),
-  },
-  analyticsView: {
-    marginTop: heightScale(15),
-    marginHorizontal: widthScale(14),
-    borderRadius: moderateScale(12),
-    borderColor: Colors.border,
-    borderWidth: moderateScale(1),
-    alignItems: 'center',
-  },
-  analyticsTitle: {
-    marginTop: heightScale(30),
-    fontSize: normalize(25),
-    color: Colors.black,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  pieChartStyle: {
-    marginTop: heightScale(40),
-  },
-  circle: {
-    height: moderateScale(15),
-    width: moderateScale(15),
-    borderRadius: moderateScale(7),
-    backgroundColor: 'red',
-  },
-  colorNames: {
-    fontSize: normalize(20),
-    fontWeight: '400',
-    marginLeft: widthScale(17),
   },
 })
+
+const mapStateToProps = ({ App, Auth }) => {
+  const { searchLoading, searchSuccess, searchFail, supportNumber } = App
+  return { searchLoading, searchSuccess, searchFail, supportNumber }
+}
+
+const mapDispatchToProps = { getSearch }
+
+export default connect(mapStateToProps, mapDispatchToProps)(SearchMovies)

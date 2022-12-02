@@ -25,3 +25,9 @@ export const getPhotos = data => ({
   subtypes: appActions.GET_PHOTOS,
   promise: () => appApi.getPhotosApi(data),
 })
+
+export const getSearch = data => ({
+  type: commonActions.COMMON_API_CALL,
+  subtypes: appActions.SEARCH,
+  promise: () => appApi.searchApi(data),
+})

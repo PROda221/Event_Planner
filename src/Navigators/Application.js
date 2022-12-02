@@ -5,8 +5,6 @@ import { NavigationContainer } from '@react-navigation/native'
 import { StartupContainer } from '@/Containers'
 import { useTheme } from '@/Hooks'
 import Persons from '../Containers/Persons'
-import Albums from '../Containers/Albums'
-import Photos from '@/Containers/Photos'
 import { navigationRef } from './utils'
 import { Colors } from '@/Theme/Variables'
 import scaling from '../Theme/normalize.js'
@@ -31,40 +29,12 @@ const ApplicationNavigator = () => {
             name={navigations.main}
             component={Persons}
             options={{
-              title: 'Photos',
+              title: 'Movies',
               headerShown: true,
               headerTintColor: Colors.black,
               headerTitleStyle: {
                 fontWeight: '700',
                 fontSize: normalize(34),
-              },
-            }}
-          />
-          <Stack.Screen
-            name={navigations.albums}
-            component={Albums}
-            options={{
-              title: 'Photos',
-              headerShown: true,
-              headerTintColor: Colors.black,
-              headerTitleAlign: 'center',
-              headerTitleStyle: {
-                fontWeight: '600',
-                fontSize: normalize(18),
-              },
-            }}
-          />
-          <Stack.Screen
-            name={navigations.photos}
-            component={Photos}
-            options={{
-              title: 'Photos',
-              headerShown: true,
-              headerTintColor: Colors.black,
-              headerTitleAlign: 'center',
-              headerTitleStyle: {
-                fontWeight: '600',
-                fontSize: normalize(18),
               },
             }}
           />

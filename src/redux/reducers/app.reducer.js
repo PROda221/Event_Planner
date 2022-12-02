@@ -5,103 +5,31 @@ import _ from 'lodash'
 import { Platform } from 'react-native'
 
 const initialState = {
-  personDataLoading: false,
-  personDataSuccess: null,
-  personDataFail: false,
-
-  albumDataLoading: false,
-  albumDataSuccess: null,
-  albumDataFail: false,
-
-  albumCountLoading: false,
-  albumCountSuccess: null,
-  albumCountFail: false,
-
-  getPhotosLoading: false,
-  getPhotosSuccess: null,
-  getPhotosFail: false,
+  searchLoading: false,
+  searchSuccess: null,
+  searchFail: false,
 }
 
 const AppReducer = (state = initialState, action) => {
   switch (action.type) {
-    case appActions.PERSON_DATA.START:
+    case appActions.SEARCH.START:
       return {
         ...state,
-        personDataLoading: true,
-        personDataSuccess: null,
-        personDataFail: false,
+        searchLoading: true,
+        searchSuccess: null,
+        searchFail: false,
       }
-    case appActions.PERSON_DATA.SUCCESS:
+    case appActions.SEARCH.SUCCESS:
       return {
         ...state,
-        personDataLoading: false,
-        personDataSuccess: action.payload,
+        searchLoading: false,
+        searchSuccess: action.payload,
       }
-    case appActions.PERSON_DATA.FAIL:
+    case appActions.SEARCH.FAIL:
       return {
         ...state,
-        personDataFail: action && action.errors,
-        personDataLoading: false,
-      }
-
-    case appActions.ALBUM_DATA.START:
-      return {
-        ...state,
-        albumDataLoading: true,
-        albumDataSuccess: null,
-        albumDataFail: false,
-      }
-    case appActions.ALBUM_DATA.SUCCESS:
-      return {
-        ...state,
-        albumDataLoading: false,
-        albumDataSuccess: action.payload,
-      }
-    case appActions.ALBUM_DATA.FAIL:
-      return {
-        ...state,
-        albumDataFail: action && action.errors,
-        albumDataLoading: false,
-      }
-
-    case appActions.ALBUM_COUNT.START:
-      return {
-        ...state,
-        albumCountLoading: true,
-        albumCountSuccess: null,
-        albumCountFail: false,
-      }
-    case appActions.ALBUM_COUNT.SUCCESS:
-      return {
-        ...state,
-        albumCountLoading: false,
-        albumCountSuccess: action.payload,
-      }
-    case appActions.ALBUM_COUNT.FAIL:
-      return {
-        ...state,
-        albumCountFail: action && action.errors,
-        albumCountLoading: false,
-      }
-
-    case appActions.GET_PHOTOS.START:
-      return {
-        ...state,
-        getPhotosLoading: true,
-        getPhotosSuccess: null,
-        getPhotosFail: false,
-      }
-    case appActions.GET_PHOTOS.SUCCESS:
-      return {
-        ...state,
-        getPhotosLoading: false,
-        getPhotosSuccess: action.payload,
-      }
-    case appActions.GET_PHOTOS.FAIL:
-      return {
-        ...state,
-        getPhotosFail: action && action.errors,
-        getPhotosLoading: false,
+        searchFail: action && action.errors,
+        searchLoading: false,
       }
 
     default:

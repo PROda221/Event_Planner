@@ -28,3 +28,11 @@ export const getPhotosApi = data => {
   }
   return apiService.get(`${photosEndpoint}${queryParams}`)
 }
+
+export const searchApi = data => {
+  let queryParams = ''
+  if (data) {
+    queryParams = `?apikey=b9bd48a6&s=${data?.searchText}&page=${data?.pageNo}&type=movie`
+  }
+  return apiService.get(`${queryParams}`)
+}

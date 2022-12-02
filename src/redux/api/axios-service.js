@@ -3,7 +3,7 @@ import moment from 'moment'
 
 import { getAsyncStorage } from '../../utils/asyncStorage'
 
-axios.defaults.baseURL = 'https://jsonplaceholder.typicode.com/'
+axios.defaults.baseURL = 'http://www.omdbapi.com/'
 axios.defaults.timeout = 15000
 
 axios.interceptors.response.use(

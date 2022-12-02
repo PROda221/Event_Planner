@@ -22,4 +22,10 @@ export default {
     SUCCESS: 'app.get_photos:success',
     FAIL: 'app.get_photos:fail',
   },
+
+  SEARCH: {
+    START: 'app.search:start',
+    SUCCESS: 'app.search:success',
+    FAIL: 'app.search:fail',
+  },
 }
