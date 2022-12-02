@@ -1,5 +1,5 @@
 import React from 'react'
-import { SafeAreaView, StatusBar } from 'react-native'
+import { SafeAreaView, StatusBar, Appearance } from 'react-native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { NavigationContainer } from '@react-navigation/native'
 import { StartupContainer } from '@/Containers'
@@ -16,13 +16,16 @@ const Stack = createStackNavigator()
 
 // @refresh reset
 const ApplicationNavigator = () => {
+  const colorScheme = Appearance.getColorScheme()
   const { Layout, darkMode, NavigationTheme } = useTheme()
   const { colors } = NavigationTheme
 
   return (
     <SafeAreaView style={[Layout.fill, { backgroundColor: colors.card }]}>
       <NavigationContainer theme={NavigationTheme} ref={navigationRef}>
-        <StatusBar barStyle={darkMode ? 'light-content' : 'dark-content'} />
+        <StatusBar
+          barStyle={colorScheme === 'dark' ? 'dark-content' : 'light-content'}
+        />
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Startup" component={StartupContainer} />
           <Stack.Screen
